@@ -1,0 +1,170 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guitar Note Tuner</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+        integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'music_note_recognizer/css/index.css' %}">
+
+    <style type="text/css">
+        @keyframes countdown {
+            0% {
+                color: white;
+                background-color: blue;
+            }
+    
+            50% {
+                color: white;
+                background-color: blue;
+            }
+
+            60% {
+                color: white;
+                background-color: green;
+            }
+    
+            90% {
+                color: white;
+                background-color: green;
+            }
+
+            100% {
+                color: grey;
+                background-color: white;
+            }
+        }
+    
+        .animate-class {
+            cursor: pointer;
+    
+            animation-name: countdown;
+            animation-duration: 6s;
+        }
+    </style>
+
+    <script type="text/javascript">
+        function animate_btn(element) {
+            element.className = 'cell-content animate-class';
+
+            if (navigator.mediaDevices) {
+                console.log('getUserMedia supported.');
+
+                var constraints = { audio: true };
+                var chunks = [];
+
+                navigator.mediaDevices.getUserMedia(constraints)
+                    .then(function (stream) {
+
+                        var mediaRecorder = new MediaRecorder(stream);
+
+                        mediaRecorder.start();
+                        console.log(mediaRecorder.state);
+                        console.log("recorder started");
+
+                        setTimeout(
+                            function () {
+                                mediaRecorder.stop();
+                                console.log(mediaRecorder.state);
+                                console.log("recorder stopped");
+                            },
+                            1000
+                        )
+
+                        mediaRecorder.onstop = function (e) {
+                            console.log("data available after MediaRecorder.stop() called.");
+
+                            var clipName = "s.wav";
+                            var clipContainer = document.createElement('article');
+                            var clipLabel = document.createElement('p');
+                            var audio = document.createElement('audio');
+                            var deleteButton = document.createElement('button');
+                            var soundClips = document.createElement('div');
+
+                            clipContainer.classList.add('clip');
+                            audio.setAttribute('controls', '');
+                            deleteButton.innerHTML = "Delete";
+                            clipLabel.innerHTML = clipName;
+
+                            clipContainer.appendChild(audio);
+                            clipContainer.appendChild(clipLabel);
+                            clipContainer.appendChild(deleteButton);
+                            soundClips.appendChild(clipContainer);
+
+                            audio.controls = true;
+                            var blob = new Blob(chunks, { 'type': 'audio/ogg; codecs=opus' });
+                            chunks = [];
+                            var audioURL = URL.createObjectURL(blob);
+                            audio.src = audioURL;
+                            console.log(blob);
+                            console.log(audioURL);
+                            console.log("recorder stopped");
+
+                        }
+
+                        mediaRecorder.ondataavailable = function (e) {
+                            chunks.push(e.data);
+                        }
+                    })
+                    .catch(function (err) {
+                        console.log('The following error occurred: ' + err);
+                    })
+                }
+            }
+
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="bar">
+            <div class="cell">
+                <div class="cell-content" id="record"  onclick="animate_btn(this)">
+                    <span>A</span>
+                </div>
+            </div>
+            <div class="cell">
+                <div class="cell-content" id="record"  onclick="animate_btn(this)">
+                    <span>A</span>
+                </div>
+            </div>
+            <div class="cell">
+                <div class="cell-content" id="record"  onclick="animate_btn(this)">
+                    <span>A</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bar">
+            <div class="cell">
+                <div class="cell-content" id="record"  onclick="animate_btn(this)">
+                    <span>A</span>
+                </div>
+            </div>
+            <div class="cell">
+                <div class="cell-content" id="record"  onclick="animate_btn(this)">
+                    <span>A</span>
+                </div>
+            </div>
+            <div class="cell">
+                <div class="cell-content" id="record"  onclick="animate_btn(this)">
+                    <span>A</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- <script src="{% static 'music_note_recognizer/js/record.js' %}"></script> -->
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+        integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
+        integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV"
+        crossorigin="anonymous"></script>
+</body>
+</html>
