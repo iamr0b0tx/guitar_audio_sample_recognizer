@@ -1,60 +1,118 @@
-if (navigator.mediaDevices) {
-  console.log('getUserMedia supported.');
+//webkitURL is deprecated but nevertheless
+URL = window.URL || window.webkitURL;
 
-  var constraints = { audio: true };
-  var chunks = [];
+var gumStream; 						//stream from getUserMedia()
+var rec; 							//Recorder.js object
+var input; 							//MediaStreamAudioSourceNode we'll be recording
 
-  navigator.mediaDevices.getUserMedia(constraints)
-  .then(function(stream) {
+// shim for AudioContext when it's not avb. 
+var AudioContext = window.AudioContext || window.webkitAudioContext;
+var audioContext //audio context to help us record
 
-    var mediaRecorder = new MediaRecorder(stream);
+// audio previewer
+var au = document.getElementById("audio");
+
+function startRecording() {
+	console.log("recording...");
+
+	/*
+		Simple constraints object, for more advanced audio features see
+		https://addpipe.com/blog/audio-constraints-getusermedia/
+	*/
     
-    ediaRecorder.start();
-    console.log(mediaRecorder.state);
-    console.log("recorder started");
+    var constraints = { audio: true, video:false }
 
-    setTimeout(
-        function () {
-            mediaRecorder.stop();
-            console.log(mediaRecorder.state);
-            console.log("recorder stopped");
-        },
-        1000
-    ) 
 
-    mediaRecorder.onstop = function(e) {
-      console.log("data available after MediaRecorder.stop() called.");
+	/*
+    	We're using the standard promise based getUserMedia() 
+    	https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
+	*/
 
-      var clipName = prompt('Enter a name for your sound clip');
-      var clipContainer = document.createElement('article');
-      var clipLabel = document.createElement('p');
-      var audio = document.createElement('audio');
-      var deleteButton = document.createElement('button');
-     
-      clipContainer.classList.add('clip');
-      audio.setAttribute('controls', '');
-      deleteButton.innerHTML = "Delete";
-      clipLabel.innerHTML = clipName;
+	navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
+		console.log("getUserMedia() success, stream created, initializing Recorder.js ...");
 
-      clipContainer.appendChild(audio);
-      clipContainer.appendChild(clipLabel);
-      clipContainer.appendChild(deleteButton);
-      soundClips.appendChild(clipContainer);
+		/*
+			create an audio context after getUserMedia is called
+			sampleRate might change after getUserMedia is called, like it does on macOS when recording through AirPods
+			the sampleRate defaults to the one set in your OS for your playback device
 
-      audio.controls = true;
-      var blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
-      chunks = [];
-      var audioURL = URL.createObjectURL(blob);
-      audio.src = audioURL;
-      console.log("recorder stopped");
+		*/
+		audioContext = new AudioContext();
 
-    }
+		//update the format 
+		document.getElementById("formats").innerHTML="Format: 1 channel pcm @ "+audioContext.sampleRate/1000+"kHz"
 
-    mediaRecorder.ondataavailable = function(e) {
-      chunks.push(e.data);
-    }
-  })
-  .catch(function(err) {
-    console.log('The following error occurred: ' + err);
-  })
+		/*  assign to gumStream for later use  */
+		gumStream = stream;
+		
+		/* use the stream */
+		input = audioContext.createMediaStreamSource(stream);
+
+		/* 
+			Create the Recorder object and configure to record mono sound (1 channel)
+			Recording 2 channels  will double the file size
+		*/
+		rec = new Recorder(input,{numChannels:1})
+
+		//start the recording process
+		rec.record()
+
+		console.log("Recording started");
+
+	}).catch(function(err) {
+	  	//if getUserMedia() fails
+		console.log("error occured while starting recording!")
+		console.log(err)
+	});
+}
+
+function stopRecording() {
+	console.log("stop recording");
+	
+	//tell the recorder to stop the recording
+	rec.stop();
+
+	//stop microphone access
+	gumStream.getAudioTracks()[0].stop();
+
+	//create the wav blob and pass it on to createDownloadLink
+	rec.exportWAV(createDownloadLink);
+}
+
+function createDownloadLink(blob) {	
+	var url = URL.createObjectURL(blob);
+
+	//name of .wav file to use during upload and download (without extendion)
+	var filename = new Date().toISOString();
+
+	//add controls to the <audio> element
+	au.controls = true;
+	au.src = url;
+
+	// upload to server
+	var xhr=new XMLHttpRequest();
+	xhr.onload = function(e) {
+		if(this.readyState === 4) {
+			response = JSON.parse(e.target.responseText)
+			
+			console.log("Server returned: ");
+			console.log(this.response)
+		}
+	};
+	var fd=new FormData();
+	fd.append("audio_data", blob, filename);
+	xhr.open("POST","/predict", true);
+	xhr.send(fd);
+}
+
+function animate_btn(element) {
+	element.className = 'cell-content animate-class';
+	setTimeout(async () => {
+		startRecording();
+
+		const sleep = m => new Promise(r => setTimeout(r, m));
+		await sleep(3000);
+
+		stopRecording();
+	}, 3000);
 }

@@ -1,0 +1,70 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<title>Guitar Note Tuner</title>
+
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+		integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<link
+		href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAEf8AzP8AAABI/wAA/wAA/4QAAADV/wD/AFEAjAD/AAD/8gAAN/8A6gD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAEiIiIiIiIiIVVVVWZVVVUBUzM1ZlMzNQFTZjVmU2Y1AVNmNWZTZjUBUzM1ZlMzNQFVVVVmVVVVAYiIiGaqqqoBMzMzMzMzMwEzMzMzMzMzAXd3eGand3cBd3d4Zqd3dwF3d3hmp3d3kXd3eGand3cBd3d4Zqd3dwREREREREREQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+		rel="icon" type="image/x-icon" />
+    <link rel="stylesheet" href="{% static 'music_note_recognizer/css/record.css' %}">
+
+</head>
+
+<body>
+	<!-- <audio src="" id=="audio" controls></audio> -->
+	<div class="container">
+		<h1>Guitar Tunining Tool</h1>
+		<audio src="" controls id="audio"></audio>
+		<div id="formats">Format: start recording to see sample rate</div><br>
+
+		<div class="bar">
+			<div class="cell">
+				<div class="cell-content" id="record" onclick="animate_btn(this)">
+					<span>A</span>
+				</div>
+			</div>
+			<div class="cell">
+				<div class="cell-content" id="record" onclick="animate_btn(this)">
+					<span>A</span>
+				</div>
+			</div>
+			<div class="cell">
+				<div class="cell-content" id="record" onclick="animate_btn(this)">
+					<span>A</span>
+				</div>
+			</div>
+		</div>
+	
+		<div class="bar">
+			<div class="cell">
+				<div class="cell-content" id="record" onclick="animate_btn(this)">
+					<span>A</span>
+				</div>
+			</div>
+			<div class="cell">
+				<div class="cell-content" id="record" onclick="animate_btn(this)">
+					<span>A</span>
+				</div>
+			</div>
+			<div class="cell">
+				<div class="cell-content" id="record" onclick="animate_btn(this)">
+					<span>A</span>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- inserting these scripts at the end to be able to use all the elements in the DOM -->
+	<script src="https://cdn.rawgit.com/mattdiamond/Recorderjs/08e7abd9/dist/recorder.js"></script>
+	<script src="static/music_note_recognizer/js/record.js"></script>
+</body>
+
+</html>

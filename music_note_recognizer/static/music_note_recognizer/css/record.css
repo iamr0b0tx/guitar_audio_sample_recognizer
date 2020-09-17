@@ -1,0 +1,140 @@
+.container{
+    width: 100%;
+    height: 100vh;
+    /* background-color: blue; */
+    padding: 2% 10%;
+    text-align: center;
+
+}
+
+audio:focus{
+    outline: none;
+}
+
+.bar{
+    height: 35%;
+    /* background-color: red; */
+}
+
+.cell{
+    /* background-color: green; */
+    width: 33.33%;
+    height: 100%;
+    text-align: center;
+    vertical-align: middle;
+    padding: 1% 5%;
+    float: left;
+
+}
+
+.cell-content{
+    border: 1px solid red;
+    background-color: white;
+    border-radius: 100%;
+    width: 100%;
+    height: 100%;
+    color: grey;
+}
+
+.cell-content > span{
+    font-size: xx-large;
+    color: inherit;
+    font-weight: 900;
+
+    position: relative;
+    top: 35%;
+}
+
+/* .cell-content:hover{
+    color: blue;
+    background-color: white;
+} */
+
+@keyframes countdown {
+    0% {
+        color: white;
+        background-color: blue;
+    }
+
+    50% {
+        color: white;
+        background-color: blue;
+    }
+
+    60% {
+        color: white;
+        background-color: green;
+    }
+
+    90% {
+        color: white;
+        background-color: green;
+    }
+
+    100% {
+        color: grey;
+        background-color: white;
+    }
+}
+
+.animate-class {
+    cursor: pointer;
+
+    animation-name: countdown;
+    animation-duration: 6s;
+}
+
+
+@media only screen and (max-width: 800px) {
+    .container{
+        padding: 10% 10%;
+
+    }
+}
+
+@media only screen and (max-width: 600px) {
+    .bar{
+        height: 33.33%;
+    }
+
+    .cell{
+        width: 50%;
+        padding: 5%;
+
+    }
+
+    .cell-content > span{
+        top: 25%;
+    }
+}
+
+@media only screen and (max-width: 400px) {
+   .bar{
+        height: 33.33%;
+    }
+
+    .cell{
+        width: 50%;
+        padding: 10% 5%;
+    }
+
+    .cell-content > span{
+        top: 22%;
+    }
+}
+
+@media only screen and (max-width: 375px) {
+    .cell{
+        padding: 5% 5%;
+    }
+}
+
+@media only screen and (max-width: 350px) {
+    audio{
+        width: 90%;
+    }
+
+    .cell{
+        padding: 10% 5%;
+    }
+}
