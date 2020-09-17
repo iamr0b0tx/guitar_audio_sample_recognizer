@@ -11,23 +11,23 @@ audio:focus{
     outline: none;
 }
 
-.bar{
-    height: 35%;
+.box{
+    height: 70%;
     /* background-color: red; */
 }
 
-.cell{
+.inner-box{
     /* background-color: green; */
-    width: 33.33%;
+    width: 100%;
     height: 100%;
     text-align: center;
     vertical-align: middle;
-    padding: 1% 5%;
+    padding: 0% 25%;
     float: left;
 
 }
 
-.cell-content{
+.note{
     border: 1px solid red;
     background-color: white;
     border-radius: 100%;
@@ -36,16 +36,16 @@ audio:focus{
     color: grey;
 }
 
-.cell-content > span{
+.note > span{
     font-size: xx-large;
     color: inherit;
     font-weight: 900;
 
     position: relative;
-    top: 35%;
+    top: 40%;
 }
 
-/* .cell-content:hover{
+/* .note:hover{
     color: blue;
     background-color: white;
 } */
@@ -93,48 +93,47 @@ audio:focus{
 }
 
 @media only screen and (max-width: 600px) {
-    .bar{
-        height: 33.33%;
+    .box{
+        height: 60%;
     }
 
-    .cell{
-        width: 50%;
-        padding: 5%;
-
-    }
-
-    .cell-content > span{
-        top: 25%;
+    .inner-box{
+        padding: 1% 5%;
     }
 }
 
 @media only screen and (max-width: 400px) {
-   .bar{
-        height: 33.33%;
+    .box{
+        height: 60%;
     }
 
-    .cell{
-        width: 50%;
+    .inner-box{
         padding: 10% 5%;
     }
 
-    .cell-content > span{
-        top: 22%;
+    .note > span{
+        top: 35%;
     }
 }
 
 @media only screen and (max-width: 375px) {
-    .cell{
+
+
+    .inner-box{
         padding: 5% 5%;
     }
 }
 
 @media only screen and (max-width: 350px) {
+    .box{
+        height: 50%;
+    }
+
     audio{
         width: 90%;
     }
 
-    .cell{
-        padding: 10% 5%;
+    .inner-box{
+        padding: 1% 1%;
     }
 }

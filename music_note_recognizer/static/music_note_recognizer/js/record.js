@@ -12,6 +12,10 @@ var audioContext //audio context to help us record
 // audio previewer
 var au = document.getElementById("audio");
 
+// the csrf token
+var form = document.getElementById("form");
+
+
 function startRecording() {
 	console.log("recording...");
 
@@ -93,20 +97,21 @@ function createDownloadLink(blob) {
 	var xhr=new XMLHttpRequest();
 	xhr.onload = function(e) {
 		if(this.readyState === 4) {
+			console.log(e.target.responseText)
 			response = JSON.parse(e.target.responseText)
 			
 			console.log("Server returned: ");
 			console.log(this.response)
 		}
 	};
-	var fd=new FormData();
+	var fd = new FormData(form);
 	fd.append("audio_data", blob, filename);
-	xhr.open("POST","/predict", true);
+	xhr.open("POST","./predict", true);
 	xhr.send(fd);
 }
 
 function animate_btn(element) {
-	element.className = 'cell-content animate-class';
+	element.className = 'note animate-class';
 	setTimeout(async () => {
 		startRecording();
 
@@ -114,5 +119,7 @@ function animate_btn(element) {
 		await sleep(3000);
 
 		stopRecording();
+		element.className = 'note';
+
 	}, 3000);
 }

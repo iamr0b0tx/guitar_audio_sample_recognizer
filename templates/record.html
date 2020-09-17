@@ -23,48 +23,26 @@
 	<div class="container">
 		<h1>Guitar Tunining Tool</h1>
 		<audio src="" controls id="audio"></audio>
-		<div id="formats">Format: start recording to see sample rate</div><br>
+		<div id="formats">Format: 0 channel pcm @  0kHz</div><br>
 
-		<div class="bar">
-			<div class="cell">
-				<div class="cell-content" id="record" onclick="animate_btn(this)">
-					<span>A</span>
+		<div class="box">
+			<div class="inner-box">
+				<div class="note" id="record" onclick="animate_btn(this)">
+					<span>{{ note }}</span>
 				</div>
 			</div>
-			<div class="cell">
-				<div class="cell-content" id="record" onclick="animate_btn(this)">
-					<span>A</span>
-				</div>
-			</div>
-			<div class="cell">
-				<div class="cell-content" id="record" onclick="animate_btn(this)">
-					<span>A</span>
-				</div>
-			</div>
+			
 		</div>
-	
-		<div class="bar">
-			<div class="cell">
-				<div class="cell-content" id="record" onclick="animate_btn(this)">
-					<span>A</span>
-				</div>
-			</div>
-			<div class="cell">
-				<div class="cell-content" id="record" onclick="animate_btn(this)">
-					<span>A</span>
-				</div>
-			</div>
-			<div class="cell">
-				<div class="cell-content" id="record" onclick="animate_btn(this)">
-					<span>A</span>
-				</div>
-			</div>
-		</div>
+
 	</div>
+
+    <form id="form">
+        {% csrf_token %}
+    </form>
 
 	<!-- inserting these scripts at the end to be able to use all the elements in the DOM -->
 	<script src="https://cdn.rawgit.com/mattdiamond/Recorderjs/08e7abd9/dist/recorder.js"></script>
-	<script src="static/music_note_recognizer/js/record.js"></script>
+	<script src="{% static 'music_note_recognizer/js/record.js' %}"></script>
 </body>
 
 </html>
