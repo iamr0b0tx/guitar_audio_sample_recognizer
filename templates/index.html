@@ -4,10 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Guitar Note Tuner</title>
+
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
         integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
     <link rel="stylesheet" href="{% static 'music_note_recognizer/css/index.css' %}">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
     <style type="text/css">
         @keyframes countdown {
@@ -45,78 +48,12 @@
         }
     </style>
 
-    <script type="text/javascript">
-        function animate_btn(element) {
-            element.className = 'cell-content animate-class';
+    <!-- recommended -->
+    <script src="https://www.WebRTC-Experiment.com/RecordRTC.js"></script>
 
-            if (navigator.mediaDevices) {
-                console.log('getUserMedia supported.');
-
-                var constraints = { audio: true };
-                var chunks = [];
-
-                navigator.mediaDevices.getUserMedia(constraints)
-                    .then(function (stream) {
-
-                        var mediaRecorder = new MediaRecorder(stream);
-
-                        mediaRecorder.start();
-                        console.log(mediaRecorder.state);
-                        console.log("recorder started");
-
-                        setTimeout(
-                            function () {
-                                mediaRecorder.stop();
-                                console.log(mediaRecorder.state);
-                                console.log("recorder stopped");
-                            },
-                            1000
-                        )
-
-                        mediaRecorder.onstop = function (e) {
-                            console.log("data available after MediaRecorder.stop() called.");
-
-                            var clipName = "s.wav";
-                            var clipContainer = document.createElement('article');
-                            var clipLabel = document.createElement('p');
-                            var audio = document.createElement('audio');
-                            var deleteButton = document.createElement('button');
-                            var soundClips = document.createElement('div');
-
-                            clipContainer.classList.add('clip');
-                            audio.setAttribute('controls', '');
-                            deleteButton.innerHTML = "Delete";
-                            clipLabel.innerHTML = clipName;
-
-                            clipContainer.appendChild(audio);
-                            clipContainer.appendChild(clipLabel);
-                            clipContainer.appendChild(deleteButton);
-                            soundClips.appendChild(clipContainer);
-
-                            audio.controls = true;
-                            var blob = new Blob(chunks, { 'type': 'audio/ogg; codecs=opus' });
-                            chunks = [];
-                            var audioURL = URL.createObjectURL(blob);
-                            audio.src = audioURL;
-                            console.log(blob);
-                            console.log(audioURL);
-                            console.log("recorder stopped");
-
-                        }
-
-                        mediaRecorder.ondataavailable = function (e) {
-                            chunks.push(e.data);
-                        }
-                    })
-                    .catch(function (err) {
-                        console.log('The following error occurred: ' + err);
-                    })
-                }
-            }
-
-    </script>
 </head>
 <body>
+    <!-- <audio src="" id=="audio" controls></audio> -->
     <div class="container">
         <div class="bar">
             <div class="cell">
@@ -154,9 +91,127 @@
             </div>
         </div>
     </div>
+    
+    <form action="/" method="POST" id="form" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="audioFile" id="audioFile">
+    </form>
 
-    <!-- <script src="{% static 'music_note_recognizer/js/record.js' %}"></script> -->
+    <script type="text/javascript">
+        audio = document.createElement("audio")
+        audio.setAttribute("controls", "")
+        audio.setAttribute("src", "")
+        document.body.appendChild(audio)
 
+        csrf = document.getElementsByName("csrfmiddlewaretoken")[0]
+
+        function uploadToServer(formData) {
+            $.post("/", formData, ()=>{
+                console.log('sent to server!')
+            })
+        }
+
+        function animate_btn(element) {
+            navigator.mediaDevices.getUserMedia({
+                video: false,
+                audio: true
+
+            }).then(function (stream) {
+                let recorder = RecordRTC(stream, {
+                    type: 'audio',
+                    mimeType: 'audio/wav',
+                    recorderType: MediaStreamRecorder,
+
+                    // disable logs
+                    disableLogs: false,
+
+                    // requires timeSlice above
+                    // returns blob via callback function
+                    ondataavailable: function (blob) { },
+
+                    // if you are recording multiple streams into single file
+                    // this helps you see what is being recorded
+                    previewStream: function (stream) { },
+
+
+                    // used by StereoAudioRecorder
+                    // 1 or 2
+                    numberOfAudioChannels: 1,
+
+                    // used by MultiStreamRecorder - to access HTMLCanvasElement
+                    // elementClass: 'multi-streams-mixer'
+                });
+
+                element.className = 'cell-content animate-class';
+                setTimeout(async () => {
+                    recorder.startRecording();
+
+                    const sleep = m => new Promise(r => setTimeout(r, m));
+                    await sleep(3000);
+
+                    var fiveMinutes = 3000;
+                    recorder.stopRecording(function () {
+                        // recorder.setRecordingDuration(fiveMinutes, function () {
+                        let blob = recorder.getBlob();
+                        
+                        var filename = 'filename.webm'
+                        var file = new File([blob], filename, {
+                            // type: 'audio/wav'
+                            type: 'audio/webm'
+                        });
+
+
+                        var xhr = new XMLHttpRequest();
+                        xhr.open('POST', '/', true);
+                        xhr.onload = function (e) { console.log("hi hi!") };
+                        xhr.send(file);
+
+                        recorder.destroy()
+                        return
+
+                        
+                        var a = document.createElement("a"),
+                            url = URL.createObjectURL(file);
+                        console.log(url);
+                        a.href = url;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        setTimeout(function () {
+                            document.body.removeChild(a);
+                            window.URL.revokeObjectURL(url);
+                        }, 0); 
+
+                        var arrayBuffer = this.buffer;
+                        console.log(arrayBuffer);
+                        console.log(blob)
+
+                        recorder.getDataURL(function (dataURI) {
+                            audio.src = dataURI;
+                        });
+
+                        console.log(formData)
+                        formData.append('name', file); // upload "File" object rather than a "Blob"
+                        formData.append('audioFile', file); // upload "File" object rather than a "Blob"
+                        console.log(formData)
+                        console.log($.ajax)
+                        // uploadToServer(formData);
+
+                        // setTimeout(() => {
+                        //     formData.submit()
+
+                        // }, 2000);
+
+
+                    });
+
+                }, 3000);
+
+            });
+        }
+
+    </script>
+    
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
         integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
         crossorigin="anonymous"></script>
@@ -166,5 +221,7 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
         integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV"
         crossorigin="anonymous"></script>
+
+    
 </body>
 </html>
