@@ -167,42 +167,6 @@
                         xhr.send(file);
 
                         recorder.destroy()
-                        return
-
-                        
-                        var a = document.createElement("a"),
-                            url = URL.createObjectURL(file);
-                        console.log(url);
-                        a.href = url;
-                        a.download = filename;
-                        document.body.appendChild(a);
-                        a.click();
-                        setTimeout(function () {
-                            document.body.removeChild(a);
-                            window.URL.revokeObjectURL(url);
-                        }, 0); 
-
-                        var arrayBuffer = this.buffer;
-                        console.log(arrayBuffer);
-                        console.log(blob)
-
-                        recorder.getDataURL(function (dataURI) {
-                            audio.src = dataURI;
-                        });
-
-                        console.log(formData)
-                        formData.append('name', file); // upload "File" object rather than a "Blob"
-                        formData.append('audioFile', file); // upload "File" object rather than a "Blob"
-                        console.log(formData)
-                        console.log($.ajax)
-                        // uploadToServer(formData);
-
-                        // setTimeout(() => {
-                        //     formData.submit()
-
-                        // }, 2000);
-
-
                     });
 
                 }, 3000);
