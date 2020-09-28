@@ -45,10 +45,11 @@ audio:focus{
     top: 40%;
 }
 
-/* .note:hover{
-    color: blue;
-    background-color: white;
-} */
+#result{
+    width: 100%;
+    height: 35px;
+    text-align: center;
+}
 
 @keyframes countdown {
     0% {

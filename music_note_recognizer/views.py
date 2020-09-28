@@ -8,17 +8,14 @@ from django.core.files.storage import default_storage
 
 import numpy as np
 import tensorflow as tf
-from .siamese_network import get_model, audio2vector, model_predict
+from .siamese_network import get_model, extract_features as audio2vector, model_predict
 
 # load the model, and pass in the custom metric function
-notes = ["a", "b", "d", "e", "eh", "g"]
+notes = ["A", "B", "D", "EL", "EH", "G"]
 
 models = {
-    note: get_model() for note in notes
+    note: get_model(label=note) for note in notes
 }
-
-for note, model in models.items():
-    model.load_weights(f'staticfiles/models/{note.upper()}_weights.h5')
 
 anchors = {
     note: audio2vector(f'staticfiles/anchors/{note.upper()}.wav') for note in notes
@@ -31,7 +28,6 @@ def index(request, user_id=None):
 
 # Create your views here.
 def record(request, user_id, note):
-    note = note.lower()
     if note not in notes:
         raise Http404
 
@@ -39,7 +35,6 @@ def record(request, user_id, note):
 
 # Create your views here.
 def predict(request, user_id, note):
-    note = note.lower()
     if note not in notes:
         raise Http404
 
@@ -65,15 +60,14 @@ def predict(request, user_id, note):
         sample_audio_vector = audio2vector(tmp_file)
         print(sample_audio_vector.shape)
 
-        data = np.array([[anchors[note], sample_audio_vector]], dtype=np.float32)
+        data = np.array([[anchors[note]], [sample_audio_vector]], dtype=np.float32)
         y = np.ones(len(data))
-        print(data.shape)
 
-        predicted = model_predict(models[note], data, y)
-        print(predicted)
+        print(data.shape)
+        predicted = model_predict(models[note], data, y, verbose=True)
 
         return JsonResponse({
-            "message": "Nice"
+            "result": predicted
             },
             content_type="application/json"
         )

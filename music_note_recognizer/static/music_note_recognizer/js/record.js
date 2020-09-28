@@ -11,6 +11,7 @@ var audioContext //audio context to help us record
 
 // audio previewer
 var au = document.getElementById("audio");
+var result = document.getElementById("result");
 
 // the csrf token
 var form = document.getElementById("form");
@@ -101,7 +102,12 @@ function createDownloadLink(blob) {
 			response = JSON.parse(e.target.responseText)
 			
 			console.log("Server returned: ");
-			console.log(this.response)
+			if(response.result){
+				result.innerText = "Very Good!"
+
+			}else{
+				result.innerText = "Not Very Good!"
+			}
 		}
 	};
 	var fd = new FormData(form);

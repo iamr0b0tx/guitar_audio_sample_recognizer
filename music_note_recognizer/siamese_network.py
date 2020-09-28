@@ -1,15 +1,14 @@
-#basic imports
+# basic imports
 import glob, os
-from random import randint
 from itertools import combinations
 
-#data processing
+# data processing
 import librosa
 import numpy as np
+import pandas as pd
 
-#modelling
+# modelling
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import f1_score, accuracy_score
 
 from tensorflow.keras import backend as K
 from tensorflow.keras.layers import Activation
@@ -17,69 +16,110 @@ from tensorflow.keras.layers import Input, Lambda, Dense, Dropout, Flatten, Conv
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.optimizers import RMSprop, Adam
 
-CWD = '.'
+# the data pair 
+from itertools import combinations
+from math import factorial
 
-def audio2vector(file_path, max_pad_len=400):
-    
-    #read the audio file
-    audio, sr = librosa.load(file_path, mono=True)
-    #reduce the shape
-    audio = audio[::3]
-    
-    #extract the audio embeddings using MFCC
-    mfcc = librosa.feature.mfcc(audio, sr=sr) 
-    
-    #as the audio embeddings length varies for different audio, we keep the maximum length as 400
-    #pad them with zeros
-    pad_width = max_pad_len - mfcc.shape[1]
-    mfcc = np.pad(mfcc, pad_width=((0, 0), (0, pad_width)), mode='constant')
-    return np.reshape(mfcc, tuple(list(mfcc.shape) + [1]))
+BASE_DIR = os.getcwd()
+if not BASE_DIR.endswith("guitar_music_note_recognizer"):
+    BASE_DIR = os.path.join(BASE_DIR, "..")
+
+BASE_DIR = os.path.abspath(BASE_DIR)
+
+# Set the path to the full dataset 
+DATA_DIR = os.path.join(BASE_DIR, "data", "guitar_sample")
+
+# for the audio vector
+MAX_PAD_LEN = 400
+
+INPUT_DIMENSION = (40, 400, 1)
+
+def number_of_combinations(n, r):
+    return int(factorial(n) / (factorial(n - r) * factorial(r)))
 
 
+def get_featuresdf(data_dir=None):
+    if data_dir is None:
+        data_dir = DATA_DIR
 
-def get_training_data(d):
+    # feature list
+    features = []
 
-    pairs, labels = [], []
-    dirs = sorted(os.listdir('{}/data/guitar_sample'.format(CWD)))    
-    
-    #audio file samples afs
-    di = dirs.index(d)
-    afs = glob.glob('{}/data/guitar_sample/{}/*.wav'.format(CWD, d))
-    
-    n = len(afs)
-    combs = combinations(range(0, n), 2)
-
-    for i, j in combs:
-        ri = randint(0, len(dirs)-1)
-        while ri == di:
-            ri = randint(0, len(dirs)-1)
-                            
-        #other audio file samples
-        oafs = glob.glob('{}/data/guitar_sample/{}/*.wav'.format(CWD, dirs[ri]))
-        
-        k = randint(0, len(oafs)-1)
-        x, y, z = audio2vector(afs[i]), audio2vector(afs[j]), audio2vector(oafs[k])
-                
-        #genuine pair
-        pairs.append([x, y])
-        labels.append(1)
-
-        #imposite pair
-        pairs.append([y, z])
-        labels.append(0)
+    # Iterate through each sound file and extract the features 
+    for folder in os.listdir(data_dir):
+        for file in os.listdir(os.path.join(data_dir, folder)):
+            class_label = folder
+            file_name = os.path.join(os.path.join(data_dir, folder, file))
             
-            
-    return np.array(pairs, dtype=float), np.array(labels, dtype=float)
+            data = extract_features(file_name)
+            features.append([data, class_label])
 
-def euclidean_distance(vects):
-    x, y = vects
-    return K.sqrt(K.sum(K.square(x - y), axis=1, keepdims=True))
+    # Convert into a Panda dataframe 
+    featuresdf = pd.DataFrame(features, columns=['feature','class_label'])
+    print('Finished feature extraction from ', len(featuresdf), ' files') 
 
+    return featuresdf
 
-def eucl_dist_output_shape(shapes):
-    shape1, shape2 = shapes
-    return (shape1[0], 1)
+def extract_features(file_name):
+    try:
+        audio, sample_rate = librosa.load(file_name, res_type='kaiser_fast') 
+        mfccs = librosa.feature.mfcc(y=audio, sr=sample_rate, n_mfcc=40)
+        pad_width = MAX_PAD_LEN - mfccs.shape[1]
+        mfccs = np.pad(mfccs, pad_width=((0, 0), (0, pad_width)), mode='constant')
+        mfccs = mfccs.reshape(tuple(list(mfccs.shape) + [1]))
 
+    except Exception as e:
+        print("Error encountered while parsing file: ", file_name, e)
+        return None 
+     
+    return mfccs
+
+def prepare_data_pair(X, y, label):
+    label = f"1{label}"
+    semilabel = f"0{label}"
+    
+    indices = np.array(list(range(len(y))))
+    similar_indices = indices[y == label]
+    train_half_size = number_of_combinations(len(similar_indices), 2)
+
+    semisimilar_indices = indices[y == semilabel][:train_half_size]
+    
+    dissimilar_indices = indices[(y != label) & (y != semilabel)]
+    np.random.shuffle(dissimilar_indices)
+    
+    dissimilar_indices = dissimilar_indices[:train_half_size - len(semisimilar_indices)]
+    dissimilar_indices = np.concatenate([semisimilar_indices, dissimilar_indices])
+    
+    np.random.shuffle(dissimilar_indices)
+    
+    similar_indices_pair = []
+    dissimilar_indices_pair = []
+
+    size = 0
+    it = iter(dissimilar_indices)
+    
+    for i, j in combinations(similar_indices, 2):
+        size += 1
+        similar_indices_pair.append([i, j])
+        dissimilar_indices_pair.append([i, next(it)])
+    
+    # get the dimension of data based on combination
+    dim = tuple([2, 2*size] + list(X.shape[1:]))
+    
+    # build the sim and dis-sim matrix
+    new_X = np.empty(dim, dtype=float)
+    new_y = np.concatenate([np.ones(size, dtype=float), np.zeros(size, dtype=float)])
+    
+    similar_indices_pair = np.array(similar_indices_pair)
+    dissimilar_indices_pair = np.array(dissimilar_indices_pair)
+    
+    new_X[0, :size], new_X[1, :size] = X[similar_indices_pair[:, 0]], X[similar_indices_pair[:, 1]]
+    new_X[0:, size:], new_X[1, size:] = X[dissimilar_indices_pair[:, 0]], X[dissimilar_indices_pair[:, 1]]
+    
+    all_indices = np.array(list(range(2*size)))
+    np.random.shuffle(all_indices)
+    
+    return new_X[:, all_indices], new_y[all_indices]
 
 def build_base_network(input_shape):
     model = Sequential()
@@ -100,121 +140,129 @@ def build_base_network(input_shape):
     model.add(Dropout(0.1))
     
     model.add(Dense(128))
-    model.add(Dropout(0.1))
-    
     return model
 
+
+def euclidean_distance(vects):
+    x, y = vects
+    return K.sqrt(K.sum(K.square(x - y), axis=1, keepdims=True))
+
+def eucl_dist_output_shape(shapes):
+    shape1, shape2 = shapes
+    return (shape1[0], 1)
 
 def distance(emb1, emb2):
     return np.sum(np.square(emb1 - emb2))
 
 
-def model_predict(model, afs, y, threshold=0.5):
-    print(afs.shape)
-    acc = 0
-    preds = model.predict([afs[:, 0], afs[:, 1]])
+def model_predict(model, afs, y=None, threshold=0.5, verbose=False):
+    score = 0
+    preds = model.predict([afs[0], afs[1]])
     for i in range(len(preds)):
         p = preds[i][0]
         z = int(p < threshold)
+        
+        if y is None:
+            continue
+
         if z == y[i]:
-            acc += 1
-        print(z, y[i], f"{p:.4f}")
-    print('acc = {:.4f}%'.format(acc*100/len(preds)))
+            score += 1
+            
+        if verbose:
+            print(z, y[i], p)
+
+    accuracy = score / len(preds)
+
+    if y is not None:
+        print(f'acc: {score} / {len(preds)} = {accuracy*100}%')
+    
+    return int(accuracy)
+
 
 def contrastive_loss(y_true, y_pred):
     margin = 1
     return K.mean(y_true * K.square(y_pred) + (1 - y_true) * K.square(K.maximum(margin - y_pred, 0)))
 
+def initialize_model():
+    audio_input_a = Input(shape=INPUT_DIMENSION)
+    audio_input_b = Input(shape=INPUT_DIMENSION)
 
-class IdentityMetadata():
-    def __init__(self, base, name, file):
-        # dataset base directory
-        self.base = base
-        
-        # identity name
-        self.name = name
-        
-        # image file name
-        self.file = file
+    base_network = build_base_network(INPUT_DIMENSION)
 
-    def __repr__(self):
-        return self.path()
-
-    def path(self):
-        return os.path.join(self.base, self.name, self.file) 
-    
-def load_metadata(path):
-    metadata = []
-    for i in os.listdir(path):
-        for f in os.listdir(os.path.join(path, i)):
-            # Check file extension. Allow only jpg/jpeg' files.
-            ext = os.path.splitext(f)[1]
-            if ext == '.wav':
-                metadata.append(IdentityMetadata(path, i, f))
-    return np.array(metadata)
-
-def get_model():
-    # initialize network architecture
-    input_dim = (20, 400, 1)
-
-    audio_a = Input(shape=input_dim)
-    audio_b = Input(shape=input_dim)
-
-    base_network = build_base_network(input_dim)
-
-    feat_vecs_a = base_network(audio_a)
-    feat_vecs_b = base_network(audio_b)
+    feat_vecs_a = base_network(audio_input_a)
+    feat_vecs_b = base_network(audio_input_b)
 
     difference = Lambda(euclidean_distance, output_shape=eucl_dist_output_shape)([feat_vecs_a, feat_vecs_b])
-    optimizer = Adam() #RMSprop()
+
+    # initialize model params
+    optimizer = Adam()
 
     # initialize the network
-    model = Model(inputs=[audio_a, audio_b], outputs=difference)
+    model = Model(inputs=[audio_input_a, audio_input_b], outputs=difference)
     model.compile(loss=contrastive_loss, optimizer=optimizer)
     return model
 
-def run(label, train=True):
-    model = get_model()
-    weights_path = f'weights/{label}_weights.h5'
+def get_model(label, X=None, y=None, train=False, epochs=128, batch_size=64, verbose=1):
+    # create model instance
+    model = initialize_model()
 
-    # initialize training params
-    epochs = 64
-    batch_size = 24
+    # weights path
+    weights_path = os.path.join(BASE_DIR, 'weights', f'{label}_weights.h5')
     
-    X, Y = get_training_data(label)
-    X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2)
-
     if train or not os.path.exists(weights_path):
-        # call datasets
-        audio_1 = X_train[:, 0]
-        audio_2 = X_train[:, 1]
+        # split the dataset 
+        x_train_indices, x_test_indices, y_train, y_test = train_test_split(np.arange(len(y)), y, test_size=0.2, random_state = 42)
+        x_train, x_test = X[:, x_train_indices], X[:, x_test_indices]
 
+        print(f"train_input_shape = {x_train.shape}, train_output_shape={y_train.shape}")
+        print(f"test_input_shape = {x_test.shape}, test_output_shape={y_test.shape}")
+
+        assert INPUT_DIMENSION == x_train.shape[2:]
+        assert INPUT_DIMENSION == x_test.shape[2:]
+        
         # train model
         model.fit(
-            [audio_1, audio_2],
+            [x_train[0], x_train[1]], 
             y_train, 
-            validation_split=.25, 
+            validation_split=0.4, 
             batch_size=batch_size, 
-            verbose=0, 
+            verbose=verbose, 
             epochs=epochs
         )
 
         # save weights
         model.save_weights(weights_path)
 
+        
+        # model_predict
+        model_predict(model, x_test, y_test)
+
     else:
         # load weights
         model.load_weights(weights_path)
-
-    # model_predict
-    model_predict(model, X_test, y_test)
+    
+    return model
 
 def main():
-    labels = ["A", "B", "D", "E", "EH", "G"]
+    labels = ["A", "B", "D", "EL", "EH", "G"]
+    # Convert into a Pandas dataframe 
+    featuresdf = get_featuresdf()
+
+    # Convert features and corresponding classification labels into numpy arrays
+    X = np.array(featuresdf.feature.tolist())
+    y = np.array(featuresdf.class_label.tolist())
 
     for label in labels:
-        print(label)
-        run(label)
+        print("training for label", label)
+
+        # prepare data set pairs (similar and dissimilar)
+        X_label, y_label = prepare_data_pair(X, y, label)
+
+        print(f"input_shape = {X_label.shape}, output_shape={y_label.shape}")
+
+        # get model instance
+        get_model(label=label, X=X_label, y=y_label, train=True)
 
 if __name__ == '__main__':
     main()
+ 

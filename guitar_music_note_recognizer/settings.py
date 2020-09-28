@@ -135,7 +135,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 STATIC_DIRS = [
-    "music_note_recognizer/static",
+    os.path.join("music_note_recognizer", "static"),
 ]
 
 MEDIA_URL = "/media/"
