@@ -57,7 +57,7 @@ function startRecording() {
 			Create the Recorder object and configure to record mono sound (1 channel)
 			Recording 2 channels  will double the file size
 		*/
-		rec = new Recorder(input,{numChannels:1})
+		rec = new Recorder(input, {numChannels:1})
 
 		//start the recording process
 		rec.record()
@@ -85,6 +85,7 @@ function stopRecording() {
 }
 
 function createDownloadLink(blob) {	
+	result.innerText = "Analysing..."
 	var url = URL.createObjectURL(blob);
 
 	//name of .wav file to use during upload and download (without extendion)
@@ -117,9 +118,12 @@ function createDownloadLink(blob) {
 }
 
 function animate_btn(element) {
+	result.innerText = "Get Ready..."
 	element.className = 'note animate-class';
+
 	setTimeout(async () => {
 		startRecording();
+		result.innerText = "Recording...Play Now!"
 
 		const sleep = m => new Promise(r => setTimeout(r, m));
 		await sleep(3000);
