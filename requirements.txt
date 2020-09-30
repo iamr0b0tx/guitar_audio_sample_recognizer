@@ -8,6 +8,7 @@ decorator==4.4.2
 dj-database-url==0.5.0
 Django==3.1.1
 django-heroku==0.3.1
+gunicorn==20.0.4
 idna==2.10
 joblib==0.16.0
 librosa==0.8.0
