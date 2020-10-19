@@ -133,3 +133,18 @@ function animate_btn(element) {
 
 	}, 3000);
 }
+
+
+function testMic() {
+	result.innerText = "Testing Mic..."
+
+	startRecording();
+    result.innerText = "Recording...Tested!"
+
+    setTimeout(() => {
+        stopRecording();
+        result.innerText = "Click the circle and play the Note!"
+    }, 1000);
+}
+
+testMic();

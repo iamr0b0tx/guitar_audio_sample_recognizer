@@ -16,12 +16,14 @@ notes = ["A", "B", "D", "EL", "EH", "G"]
 def index(request, user_id=None):
     return render(request, 'index.html', {"notes": notes})
 
+
 # Create your views here.
 def record(request, user_id, note):
     if note not in notes:
         raise Http404
 
     return render(request, 'record.html', {"note": note.upper()})
+
 
 # Create your views here.
 def predict(request, user_id, note):
