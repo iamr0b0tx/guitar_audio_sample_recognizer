@@ -30,8 +30,22 @@ def fft(f):
 
 def get_pressed(f, spectrum):
 	""" check which note was pressed """
-	fh = [329, 247, 196, 147, 110, 82]
-	notes = ["EH", "B", "G", "D", "A", "EL"]
+	fh = [
+		329,  # "EH",
+		247,  # "B",
+		196,  # "G",
+		147,  # "D",
+		110, 440,   # "A",
+		82, 165,   # "EL"
+	]
+	notes = [
+		"EH",
+		"B",
+		"G",
+		"D",
+		"A",
+		"EL"
+	]
 
 	f, spectrum = zip(*sorted(zip(f, spectrum), key=lambda x: x[1], reverse=True))
 	f1 = f[0]
