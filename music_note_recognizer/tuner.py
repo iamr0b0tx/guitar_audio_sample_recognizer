@@ -4,6 +4,25 @@ import math
 import librosa
 import numpy as np
 
+NOTE_FREQUENCIES_REGISTER = {
+	"EH": [329],
+	"B": [247],
+	"G": [196],
+	"D": [147],
+	"A": [110, 440],
+	"EL": [82, 165],
+}
+
+NOTE_FREQUENCIES = []
+NOTES = []
+
+for note, note_frequencies in NOTE_FREQUENCIES_REGISTER.items():
+	for note_frequency in note_frequencies:
+		NOTES.append(note)
+		NOTE_FREQUENCIES.append(note_frequency)
+
+print(NOTES)
+print(NOTE_FREQUENCIES)
 
 def fft(f):
 	""" fast fourier transform """
@@ -30,22 +49,6 @@ def fft(f):
 
 def get_pressed(f, spectrum):
 	""" check which note was pressed """
-	fh = [
-		329,  # "EH",
-		247,  # "B",
-		196,  # "G",
-		147,  # "D",
-		110, 440,   # "A",
-		82, 165,   # "EL"
-	]
-	notes = [
-		"EH",
-		"B",
-		"G",
-		"D",
-		"A",
-		"EL"
-	]
 
 	f, spectrum = zip(*sorted(zip(f, spectrum), key=lambda x: x[1], reverse=True))
 	f1 = f[0]
@@ -58,19 +61,18 @@ def get_pressed(f, spectrum):
 	f1, f2 = min(f1, f2), max(f1, f2)
 	rows, rows_delta = zip(
 		*sorted(
-			zip([i for i in range(len(fh))], [abs(f1 - fi) for fi in fh]),
+			zip([i for i in range(len(NOTE_FREQUENCIES))], [abs(f1 - fi) for fi in NOTE_FREQUENCIES]),
 			key=lambda x: x[1],
 		)
 	)
 
-	
 	row = rows[0]
 	row_delta = rows_delta[0]
 
-	print(f"  Frequencies detected {notes[row]}[{row_delta}]: {f1}Hz, {f2}Hz.")
+	print(f"  Frequencies detected {NOTES[row]}[{row_delta}]: {f1}Hz, {f2}Hz, {(row_delta <= 5)}")
 
 	if row_delta <= 5:
-		return notes[row]
+		return NOTES[row]
 
 
 def get_audio_data(filename=None, quiet=True):
