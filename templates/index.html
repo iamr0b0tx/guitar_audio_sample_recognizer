@@ -19,8 +19,8 @@
 		<h1>Guitar Tunining Tool</h1>
 		<ol>
 			<h4>Tune the following notes</h4>
-			{% for note in notes %}
-				<li><a href="/record/1/{{ note }}/">{{ note.upper }}</a></li>
+			{% for audio_sample_label in audio_sample_labels %}
+				<li><a href="/record/1/{{ audio_sample_label }}/">{{ audio_sample_label.upper }}</a></li>
 			{% endfor %}
 		</ol>
 	</div>

@@ -1,5 +1,5 @@
 """
-WSGI config for guitar_music_note_recognizer project.
+WSGI config for guitar_audio_sample_recognizer project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'guitar_music_note_recognizer.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'guitar_audio_sample_recognizer.settings')
 
 application = get_wsgi_application()

@@ -1,1 +1,1 @@
-web: gunicorn guitar_music_note_recognizer.wsgi
+web: gunicorn guitar_audio_sample_recognizer.wsgi

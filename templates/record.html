@@ -14,7 +14,7 @@
 	<link
 		href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAEf8AzP8AAABI/wAA/wAA/4QAAADV/wD/AFEAjAD/AAD/8gAAN/8A6gD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAEiIiIiIiIiIVVVVWZVVVUBUzM1ZlMzNQFTZjVmU2Y1AVNmNWZTZjUBUzM1ZlMzNQFVVVVmVVVVAYiIiGaqqqoBMzMzMzMzMwEzMzMzMzMzAXd3eGand3cBd3d4Zqd3dwF3d3hmp3d3kXd3eGand3cBd3d4Zqd3dwREREREREREQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 		rel="icon" type="image/x-icon" />
-    <link rel="stylesheet" href="{% static 'music_note_recognizer/css/record.css' %}">
+    <link rel="stylesheet" href="{% static 'audio_sample_recognizer/css/record.css' %}">
 
 </head>
 
@@ -27,8 +27,8 @@
 
 		<div class="box">
 			<div class="inner-box">
-				<div class="note" id="record" onclick="animate_btn(this)">
-					<span>{{ note }}</span>
+				<div class="audio_sample_label" id="record" onclick="animate_btn(this)">
+					<span>{{ audio_sample_label }}</span>
 				</div>
 			</div>
 			
@@ -44,7 +44,7 @@
 
 	<!-- inserting these scripts at the end to be able to use all the elements in the DOM -->
 	<script src="https://cdn.rawgit.com/mattdiamond/Recorderjs/08e7abd9/dist/recorder.js"></script>
-	<script src="{% static 'music_note_recognizer/js/record.js' %}"></script>
+	<script src="{% static 'audio_sample_recognizer/js/record.js' %}"></script>
 </body>
 
 </html>
