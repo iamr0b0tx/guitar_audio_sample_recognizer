@@ -1,22 +1,19 @@
 import os
+
+from cloudinary_storage.storage import RawMediaCloudinaryStorage
 from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import render, Http404
 from django.core.files.base import ContentFile
-from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import default_storage
 
-from .models import AudioSampleLabel, AudioSample, AUDIO_SAMPLES_DIR
-from .recognizer import recognize, get_model, extract_features
-
-DATA_DIR = os.path.join("..", settings.MEDIA_ROOT, AUDIO_SAMPLES_DIR)
+from .models import AudioSampleLabel, AudioSample, AUDIO_SAMPLES_DIR, AudioSampleRecognizerModel, get_latest_model
+from .recognizer import recognize, get_model, extract_features, initialize_model
+cloudinary_raw_storage_object = RawMediaCloudinaryStorage()
 
 
 # Create your views here.
 def index(request, user_id=None):
-    for label, filepath in AudioSample.objects.all().values_list("audio_sample_label__label", "audio"):
-        print(label, filepath)
-
     audio_sample_labels = AudioSampleLabel.objects.all().values_list("label", flat=True)
     return render(request, 'index.html', {"audio_sample_labels": audio_sample_labels})
 
@@ -33,7 +30,7 @@ def record(request, user_id, audio_sample_label):
 # Create your views here.
 def predict(request, user_id, audio_sample_label):
     # the ml model
-    model = get_model(DATA_DIR, extract_features)
+    model = get_latest_model()
 
     audio_sample_labels = AudioSampleLabel.objects.all().values_list("label", flat=True)
     if audio_sample_label not in audio_sample_labels:

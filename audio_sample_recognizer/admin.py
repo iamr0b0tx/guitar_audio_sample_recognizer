@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import AudioSample, AudioSampleLabel
+from .models import AudioSample, AudioSampleLabel, AudioSampleRecognizerModel
 
 
 # Register your models here.
@@ -16,5 +16,10 @@ class AudioSampleAdmin(admin.ModelAdmin):
     audio_sample_label.short_description = 'AudioSampleLabel'
 
 
+class AudioSampleRecognizerModelAdmin(admin.ModelAdmin):
+    list_display = ('model', "created_at")
+
+
 admin.site.register(AudioSample, AudioSampleAdmin)
 admin.site.register(AudioSampleLabel, AudioSampleLabelAdmin)
+admin.site.register(AudioSampleRecognizerModel, AudioSampleRecognizerModelAdmin)

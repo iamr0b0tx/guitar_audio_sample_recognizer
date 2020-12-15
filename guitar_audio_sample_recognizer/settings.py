@@ -11,8 +11,12 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 import os
-import django_heroku
 from pathlib import Path
+
+
+import cloudinary
+import django_heroku
+
 from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -43,6 +47,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    'cloudinary',
+    'cloudinary_storage',
+
     'audio_sample_recognizer',
 ]
 
@@ -109,6 +117,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+
+CLOUDINARY_STORAGE = {
+  "CLOUD_NAME": config('CLOUDINARY_CLOUD_NAME'),
+  "API_KEY": config('CLOUDINARY_API_KEY'),
+  "API_SECRET": config('CLOUDINARY_API_SECRET')
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/

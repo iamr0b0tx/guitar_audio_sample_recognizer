@@ -1,140 +1,22 @@
-.container{
-    width: 100%;
-    height: 100vh;
-    /* background-color: blue; */
-    padding: 2% 10%;
-    text-align: center;
-
+.container {
+    /* The image used */
+    background-image: url("../images/tune_testing_background.jpg");
 }
 
-audio:focus{
-    outline: none;
+.container-loading {
+    /* The image used */
+    background-image: url("../images/tune_loading.gif");
 }
 
-.box{
-    height: 70%;
-    /* background-color: red; */
-}
-
-.inner-box{
-    /* background-color: green; */
-    width: 100%;
-    height: 100%;
-    text-align: center;
-    vertical-align: middle;
-    padding: 0% 25%;
-    float: left;
-
-}
-
-.note{
-    border: 1px solid red;
-    background-color: white;
-    border-radius: 100%;
-    width: 100%;
-    height: 100%;
-    color: grey;
-}
-
-.note > span{
-    font-size: xx-large;
-    color: inherit;
-    font-weight: 900;
-
-    position: relative;
-    top: 40%;
+.row {
+    padding: 10px 41%;
+    width: 19%;
 }
 
 #result{
-    width: 100%;
-    height: 35px;
+    position: fixed;
+    bottom: 10px;
     text-align: center;
-}
-
-@keyframes countdown {
-    0% {
-        color: white;
-        background-color: blue;
-    }
-
-    50% {
-        color: white;
-        background-color: blue;
-    }
-
-    60% {
-        color: white;
-        background-color: green;
-    }
-
-    90% {
-        color: white;
-        background-color: green;
-    }
-
-    100% {
-        color: grey;
-        background-color: white;
-    }
-}
-
-.animate-class {
-    cursor: pointer;
-
-    animation-name: countdown;
-    animation-duration: 6s;
-}
-
-
-@media only screen and (max-width: 800px) {
-    .container{
-        padding: 10% 10%;
-
-    }
-}
-
-@media only screen and (max-width: 600px) {
-    .box{
-        height: 60%;
-    }
-
-    .inner-box{
-        padding: 1% 5%;
-    }
-}
-
-@media only screen and (max-width: 400px) {
-    .box{
-        height: 60%;
-    }
-
-    .inner-box{
-        padding: 10% 5%;
-    }
-
-    .note > span{
-        top: 35%;
-    }
-}
-
-@media only screen and (max-width: 375px) {
-
-
-    .inner-box{
-        padding: 5% 5%;
-    }
-}
-
-@media only screen and (max-width: 350px) {
-    .box{
-        height: 50%;
-    }
-
-    audio{
-        width: 90%;
-    }
-
-    .inner-box{
-        padding: 1% 1%;
-    }
+    width: 100%;
+    color: #FFF;
 }

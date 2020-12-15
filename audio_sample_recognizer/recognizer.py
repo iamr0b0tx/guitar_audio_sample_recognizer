@@ -11,9 +11,6 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.metrics import confusion_matrix, classification_report
 
-from .models import AUDIO_SAMPLES_DIR
-from django.conf import settings
-
 
 def extract_features(filepath):
     # Extract data and sampling rate from file
@@ -24,7 +21,7 @@ def extract_features(filepath):
     return stft
 
 
-def get_data(data_dir: str, callback=lambda x: x) -> np.array:
+def get_local_data(data_dir: str, callback=lambda x: x) -> np.array:
     # feature list
     input_data, output_data = [], []
 
@@ -44,7 +41,7 @@ def get_data(data_dir: str, callback=lambda x: x) -> np.array:
 
 def evaluate_model(data_dir, feature_extractor):
     model = initialize_model()
-    x, y = get_data(data_dir, feature_extractor)
+    x, y = get_local_data(data_dir, feature_extractor)
 
     # split train and test data
     sss = StratifiedShuffleSplit(n_splits=1, test_size=0.25, random_state=100)
@@ -70,7 +67,7 @@ def initialize_model():
 
 
 def get_model(data_dir, feature_extractor):
-    x, y = get_data(data_dir, feature_extractor)
+    x, y = get_local_data(data_dir, feature_extractor)
 
     model = initialize_model()
     model.fit(x, y)
@@ -79,9 +76,12 @@ def get_model(data_dir, feature_extractor):
 
 
 def recognize(model, filepath):
-    return model.predict([extract_features(filepath)])[0]
+    try:
+        return model.predict([extract_features(filepath)])[0]
 
+    except ValueError as e:
+        print(e)
 
 # DATA_DIR = os.path.join("..", "guitar_audio_sample_detection", "data", "guitar_sample")
-DATA_DIR = os.path.join("..", settings.MEDIA_ROOT, AUDIO_SAMPLES_DIR)
-evaluate_model(data_dir=DATA_DIR, feature_extractor=extract_features)
+# DATA_DIR = os.path.join("..", settings.MEDIA_ROOT, AUDIO_SAMPLES_DIR)
+# evaluate_model(data_dir=DATA_DIR, feature_extractor=extract_features)
