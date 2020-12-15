@@ -131,3 +131,4 @@ staticfiles/
 data/
 media/
 .idea/
+knn_model.joblib
