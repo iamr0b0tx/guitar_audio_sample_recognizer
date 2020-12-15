@@ -1,0 +1,61 @@
+body, html {
+    font-family: "Comic Sans MS";
+    padding: 0px;
+    margin: 0px;
+}
+
+.container {
+    /* The image used */
+    background-image: url("../images/tune_background.jpg");
+
+
+    /* Full height */
+    width: 98.31%;
+    height: 96.9vh;
+
+    /* Center and scale the image nicely */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+
+    margin: 0px;
+    padding: 10px;
+}
+
+h1{
+    margin: 0px;
+    text-align: center;
+    color: white;
+}
+
+.row{
+    padding: 10px 7%;
+    width: 87%;
+    height: 10vw;
+    color: orange;
+    border-color: orange;
+}
+
+.row .audio-sample-label-outer{
+    padding-left: 2vw;
+    padding-right: 2vw;
+    width: 10vw;
+    height: 100%;
+    background-color: inherit;
+    float: left;
+}
+
+.row .audio-sample-label{
+    border: 10px solid;
+    height: 7vw;
+    width: 100%;
+    border-radius: 100%;
+    padding: 1vw 0px;
+    font-size: 5vw;
+    text-align: center;
+}
+
+a, a:visited, a:hover{
+    text-decoration: unset;
+    color: inherit;
+}

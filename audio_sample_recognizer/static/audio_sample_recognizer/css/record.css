@@ -1,0 +1,22 @@
+.container {
+    /* The image used */
+    background-image: url("../images/tune_testing_background.jpg");
+}
+
+.container-loading {
+    /* The image used */
+    background-image: url("../images/tune_loading.gif");
+}
+
+.row {
+    padding: 10px 41%;
+    width: 19%;
+}
+
+#result{
+    position: fixed;
+    bottom: 10px;
+    text-align: center;
+    width: 100%;
+    color: #FFF;
+}

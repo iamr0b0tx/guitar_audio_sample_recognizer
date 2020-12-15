@@ -1,20 +1,21 @@
 //webkitURL is deprecated but nevertheless
 URL = window.URL || window.webkitURL;
 
-var gumStream; 						//stream from getUserMedia()
-var rec; 							//Recorder.js object
-var input; 							//MediaStreamAudioSourceNode we'll be recording
+let gumStream; 						//stream from getUserMedia()
+let rec; 							//Recorder.js object
+let input; 							//MediaStreamAudioSourceNode we'll be recording
 
-// shim for AudioContext when it's not avb. 
-var AudioContext = window.AudioContext || window.webkitAudioContext;
-var audioContext //audio context to help us record
+// shim for AudioContext when it's not avb.
+let AudioContext = window.AudioContext || window.webkitAudioContext;
+let audioContext //audio context to help us record
 
 // audio previewer
-var au = document.getElementById("audio");
-var result = document.getElementById("result");
+// let au = document.getElementById("audio");
+let result = document.getElementById("result");
+let container = document.getElementById("container");
 
 // the csrf token
-var form = document.getElementById("form");
+let form = document.getElementById("form");
 
 
 function startRecording() {
@@ -24,12 +25,12 @@ function startRecording() {
 		Simple constraints object, for more advanced audio features see
 		https://addpipe.com/blog/audio-constraints-getusermedia/
 	*/
-    
-    var constraints = { audio: true, video:false }
+
+    let constraints = { audio: true, video:false }
 
 
 	/*
-    	We're using the standard promise based getUserMedia() 
+    	We're using the standard promise based getUserMedia()
     	https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
 	*/
 
@@ -44,16 +45,16 @@ function startRecording() {
 		*/
 		audioContext = new AudioContext();
 
-		//update the format 
-		document.getElementById("formats").innerHTML="Format: 1 channel pcm @ "+audioContext.sampleRate/1000+"kHz"
+		//update the format
+		// document.getElementById("formats").innerHTML="Format: 1 channel pcm @ "+audioContext.sampleRate/1000+"kHz"
 
 		/*  assign to gumStream for later use  */
 		gumStream = stream;
-		
+
 		/* use the stream */
 		input = audioContext.createMediaStreamSource(stream);
 
-		/* 
+		/*
 			Create the Recorder object and configure to record mono sound (1 channel)
 			Recording 2 channels  will double the file size
 		*/
@@ -73,7 +74,7 @@ function startRecording() {
 
 function stopRecording() {
 	console.log("stop recording");
-	
+
 	//tell the recorder to stop the recording
 	rec.stop();
 
@@ -84,53 +85,55 @@ function stopRecording() {
 	rec.exportWAV(createDownloadLink);
 }
 
-function createDownloadLink(blob) {	
+function createDownloadLink(blob) {
 	result.innerText = "Analysing..."
-	var url = URL.createObjectURL(blob);
+	let url = URL.createObjectURL(blob);
 
 	//name of .wav file to use during upload and download (without extendion)
-	var filename = new Date().toISOString();
+	let filename = new Date().toISOString();
 
 	//add controls to the <audio> element
-	au.controls = true;
-	au.src = url;
+	// au.controls = true;
+	// au.src = url;
 
 	// upload to server
-	var xhr=new XMLHttpRequest();
+	let xhr=new XMLHttpRequest();
 	xhr.onload = function(e) {
 		if(this.readyState === 4) {
 			console.log(e.target.responseText)
 			response = JSON.parse(e.target.responseText)
-			
+
 			console.log("Server returned: ");
+			console.log(response);
+
+            container.className = "container";
 			if(response.result){
-				result.innerText = "Very Good!"
+				result.innerText = "Good!"
 
 			}else{
-				result.innerText = "Not Very Good!"
+				result.innerText = "Bad!"
 			}
 		}
 	};
-	var fd = new FormData(form);
+	let fd = new FormData(form);
 	fd.append("audio_data", blob, filename);
 	xhr.open("POST","./predict", true);
 	xhr.send(fd);
 }
 
-function animate_btn(element) {
-	result.innerText = "Get Ready..."
-	element.className = 'note animate-class';
+function run_analysis() {
+	result.innerText = "Get Ready!"
 
 	setTimeout(async () => {
 		startRecording();
+
+		container.className = "container container-loading";
 		result.innerText = "Recording...Play Now!"
 
 		const sleep = m => new Promise(r => setTimeout(r, m));
-		await sleep(3000);
+		await sleep(6000);
 
 		stopRecording();
-		element.className = 'note';
-
 	}, 3000);
 }
 
@@ -147,4 +150,4 @@ function testMic() {
     }, 1000);
 }
 
-testMic();
+// testMic();

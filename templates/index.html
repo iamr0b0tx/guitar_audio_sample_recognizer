@@ -6,23 +6,30 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-	<title>Guitar Note Tuner</title>
+	<title>Guitar Sample Tuner</title>
 	<link
 		href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAEf8AzP8AAABI/wAA/wAA/4QAAADV/wD/AFEAjAD/AAD/8gAAN/8A6gD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAEiIiIiIiIiIVVVVWZVVVUBUzM1ZlMzNQFTZjVmU2Y1AVNmNWZTZjUBUzM1ZlMzNQFVVVVmVVVVAYiIiGaqqqoBMzMzMzMzMwEzMzMzMzMzAXd3eGand3cBd3d4Zqd3dwF3d3hmp3d3kXd3eGand3cBd3d4Zqd3dwREREREREREQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 		rel="icon" type="image/x-icon" />
+    <link rel="stylesheet" href="{% static 'audio_sample_recognizer/css/index.css' %}">
 
 </head>
 
 <body>
 	<!-- <audio src="" id=="audio" controls></audio> -->
 	<div class="container">
+{#        <img src="{% static 'audio_sample_recognizer/images/tune_background.jpg' %}">#}
 		<h1>Guitar Tunining Tool</h1>
-		<ol>
-			<h4>Tune the following notes</h4>
-			{% for note in notes %}
-				<li><a href="/record/1/{{ note }}/">{{ note.upper }}</a></li>
+		<div class="row">
+			{% for audio_sample_label in audio_sample_labels %}
+				<div class="audio-sample-label-outer">
+                    <a href="/record/1/{{ audio_sample_label }}/">
+                        <div class="audio-sample-label">
+                            {{ audio_sample_label.upper }}
+                        </div>
+                    </a>
+                </div>
 			{% endfor %}
-		</ol>
+		</div>
 	</div>
 
 </body>
