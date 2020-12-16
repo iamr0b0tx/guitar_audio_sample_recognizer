@@ -1,5 +1,4 @@
 from django.contrib import admin
-
 from .models import AudioSample, AudioSampleLabel, AudioSampleRecognizerModel
 
 
@@ -17,7 +16,10 @@ class AudioSampleAdmin(admin.ModelAdmin):
 
 
 class AudioSampleRecognizerModelAdmin(admin.ModelAdmin):
-    list_display = ('model', "created_at")
+    list_display = ('tag', "status_message", "created_at")
+
+    def get_readonly_fields(self, request, obj=None):
+        return ['status_message', "created_at", "model"]
 
 
 admin.site.register(AudioSample, AudioSampleAdmin)

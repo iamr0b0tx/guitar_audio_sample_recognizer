@@ -1,15 +1,12 @@
 import os
 import subprocess
 
-import cloudinary
 import joblib
-from cloudinary_storage.storage import RawMediaCloudinaryStorage
-from django.conf import settings
 from django.core.files.base import ContentFile, File
 from django.db import models
 
 # const
-from django.db.models.signals import post_save
+from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
 from django.core.files.storage import default_storage
@@ -60,6 +57,7 @@ class AudioSampleRecognizerModel(models.Model):
         storage=RawMediaCloudinaryStorage()
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    status_message = models.TextField(blank=True, null=True)
 
 
 def get_latest_model():
@@ -95,11 +93,47 @@ def get_latest_model():
     return latest_model
 
 
-@receiver(post_save, sender=AudioSampleRecognizerModel)
+@receiver(pre_save, sender=AudioSampleRecognizerModel)
 def update_model(sender, instance, **kwargs):
-    process = subprocess.Popen(
-        ['python', 'update_audio_sample_recognizer_model.py'],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
+    # run only when model not set
+    if bool(instance.model):
+        return
+
+    latest_model = get_latest_model()
+    x, y = [], []
+
+    for audio_sample_instance in AudioSample.objects.all():
+        # get audio file info
+        audio_sample_label = audio_sample_instance.audio_sample_label.label
+        audio_file_path = audio_sample_instance.audio.name
+        print(audio_file_path, audio_sample_label)
+
+        # retrieve audio file from the cloud
+        audio_file_object = cloudinary_raw_storage_object.open(audio_file_path)
+        audio_local_file_path = os.path.join(
+            "media",
+            default_storage.save(audio_file_path, ContentFile(audio_file_object.read()))
+        )
+
+        x.append(extract_features(audio_local_file_path))
+        y.append(audio_sample_label)
+
+    try:
+        # fit it to model
+        latest_model.fit(x, y)
+
+    except ValueError as e:
+        print(e)
+        instance.status_message = f"Model update failed: {e}"
+        return
+
+    # save model locally
+    model_local_file_path = "knn_model.joblib"
+    joblib.dump(latest_model, model_local_file_path)
+
+    instance.status_message = "Model Update completed successfully!"
+
+    # move model to the cloud
+    with open(model_local_file_path, 'rb') as f:
+        instance.model.save("knn_model.joblib", File(f))
 
