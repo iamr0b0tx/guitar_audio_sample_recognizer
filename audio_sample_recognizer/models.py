@@ -64,7 +64,9 @@ class AudioSampleRecognizerModel(models.Model):
 
 def get_latest_model():
     # get the latest model
-    latest_model = AudioSampleRecognizerModel.objects.all().order_by("-created_at")[:1]
+    latest_model = AudioSampleRecognizerModel.objects.exclude(
+        model__isnull=True
+    ).order_by("-created_at")[:1]
 
     # pick latest model if it exist else create a new one
     if latest_model.count():
