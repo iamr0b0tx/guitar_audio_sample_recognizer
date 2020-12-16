@@ -1,14 +1,12 @@
 import os
+import subprocess
 
-import cloudinary
 import joblib
-from cloudinary_storage.storage import RawMediaCloudinaryStorage
-from django.conf import settings
 from django.core.files.base import ContentFile, File
 from django.db import models
 
 # const
-from django.db.models.signals import post_save
+from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
 from django.core.files.storage import default_storage
@@ -51,13 +49,22 @@ class AudioSample(models.Model):
 
 
 class AudioSampleRecognizerModel(models.Model):
-    model = models.FileField(upload_to=audio_sample_model_directory_path, storage=RawMediaCloudinaryStorage())
+    tag = models.CharField(max_length=128)
+    model = models.FileField(
+        blank=True,
+        null=True,
+        upload_to=audio_sample_model_directory_path,
+        storage=RawMediaCloudinaryStorage()
+    )
     created_at = models.DateTimeField(auto_now_add=True)
+    status_message = models.TextField(blank=True, null=True)
 
 
 def get_latest_model():
     # get the latest model
-    latest_model = AudioSampleRecognizerModel.objects.all().order_by("-created_at")[:1]
+    latest_model = AudioSampleRecognizerModel.objects.exclude(
+        model__isnull=True
+    ).order_by("-created_at")[:1]
 
     # pick latest model if it exist else create a new one
     if latest_model.count():
@@ -66,12 +73,15 @@ def get_latest_model():
 
         print("using old_model", model_file_path)
 
-        # get model file from cloud
-        model_file_object = cloudinary_raw_storage_object.open(model_file_path)
-        model_local_file_path = os.path.join(
-            "media",
-            default_storage.save(model_file_path, ContentFile(model_file_object.read()))
-        )
+        # check if model already local
+        model_local_file_path = os.path.join("media", model_file_path)
+        if not os.path.exists(model_local_file_path):
+            # get model file from cloud
+            model_file_object = cloudinary_raw_storage_object.open(model_file_path)
+            model_local_file_path = os.path.join(
+                "media",
+                default_storage.save(model_file_path, ContentFile(model_file_object.read()))
+            )
 
         # get model instance locally
         latest_model = joblib.load(model_local_file_path)
@@ -83,31 +93,47 @@ def get_latest_model():
     return latest_model
 
 
-@receiver(post_save, sender=AudioSample)
+@receiver(pre_save, sender=AudioSampleRecognizerModel)
 def update_model(sender, instance, **kwargs):
+    # run only when model not set
+    if bool(instance.model):
+        return
+
     latest_model = get_latest_model()
+    x, y = [], []
 
-    # get audio file info
-    audio_sample_label = instance.audio_sample_label.label
-    audio_file_path = instance.audio.name
+    for audio_sample_instance in AudioSample.objects.all():
+        # get audio file info
+        audio_sample_label = audio_sample_instance.audio_sample_label.label
+        audio_file_path = audio_sample_instance.audio.name
+        print(audio_file_path, audio_sample_label)
 
-    # retrieve audio file from the cloud
-    audio_file_object = cloudinary_raw_storage_object.open(audio_file_path)
-    audio_local_file_path = os.path.join(
-        "media",
-        default_storage.save(audio_file_path, ContentFile(audio_file_object.read()))
-    )
+        # retrieve audio file from the cloud
+        audio_file_object = cloudinary_raw_storage_object.open(audio_file_path)
+        audio_local_file_path = os.path.join(
+            "media",
+            default_storage.save(audio_file_path, ContentFile(audio_file_object.read()))
+        )
 
-    # fit it to model
-    latest_model.fit([extract_features(audio_local_file_path)], [audio_sample_label])
+        x.append(extract_features(audio_local_file_path))
+        y.append(audio_sample_label)
+
+    try:
+        # fit it to model
+        latest_model.fit(x, y)
+
+    except ValueError as e:
+        print(e)
+        instance.status_message = f"Model update failed: {e}"
+        return
 
     # save model locally
     model_local_file_path = "knn_model.joblib"
     joblib.dump(latest_model, model_local_file_path)
 
-    # new recognizer model instance
-    new_model_instance = AudioSampleRecognizerModel.objects.create(model=model_local_file_path)
+    instance.status_message = "Model Update completed successfully!"
 
     # move model to the cloud
     with open(model_local_file_path, 'rb') as f:
-        new_model_instance.model.save("knn_model.joblib", File(f))
+        instance.model.save("knn_model.joblib", File(f))
+
