@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 import cloudinary
 import joblib
@@ -51,7 +52,13 @@ class AudioSample(models.Model):
 
 
 class AudioSampleRecognizerModel(models.Model):
-    model = models.FileField(upload_to=audio_sample_model_directory_path, storage=RawMediaCloudinaryStorage())
+    tag = models.CharField(max_length=128)
+    model = models.FileField(
+        blank=True,
+        null=True,
+        upload_to=audio_sample_model_directory_path,
+        storage=RawMediaCloudinaryStorage()
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
 
@@ -66,12 +73,15 @@ def get_latest_model():
 
         print("using old_model", model_file_path)
 
-        # get model file from cloud
-        model_file_object = cloudinary_raw_storage_object.open(model_file_path)
-        model_local_file_path = os.path.join(
-            "media",
-            default_storage.save(model_file_path, ContentFile(model_file_object.read()))
-        )
+        # check if model already local
+        model_local_file_path = os.path.join("media", model_file_path)
+        if not os.path.exists(model_local_file_path):
+            # get model file from cloud
+            model_file_object = cloudinary_raw_storage_object.open(model_file_path)
+            model_local_file_path = os.path.join(
+                "media",
+                default_storage.save(model_file_path, ContentFile(model_file_object.read()))
+            )
 
         # get model instance locally
         latest_model = joblib.load(model_local_file_path)
@@ -83,31 +93,11 @@ def get_latest_model():
     return latest_model
 
 
-@receiver(post_save, sender=AudioSample)
+@receiver(post_save, sender=AudioSampleRecognizerModel)
 def update_model(sender, instance, **kwargs):
-    latest_model = get_latest_model()
-
-    # get audio file info
-    audio_sample_label = instance.audio_sample_label.label
-    audio_file_path = instance.audio.name
-
-    # retrieve audio file from the cloud
-    audio_file_object = cloudinary_raw_storage_object.open(audio_file_path)
-    audio_local_file_path = os.path.join(
-        "media",
-        default_storage.save(audio_file_path, ContentFile(audio_file_object.read()))
+    process = subprocess.Popen(
+        ['python', 'update_audio_sample_recognizer_model.py'],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
     )
 
-    # fit it to model
-    latest_model.fit([extract_features(audio_local_file_path)], [audio_sample_label])
-
-    # save model locally
-    model_local_file_path = "knn_model.joblib"
-    joblib.dump(latest_model, model_local_file_path)
-
-    # new recognizer model instance
-    new_model_instance = AudioSampleRecognizerModel.objects.create(model=model_local_file_path)
-
-    # move model to the cloud
-    with open(model_local_file_path, 'rb') as f:
-        new_model_instance.model.save("knn_model.joblib", File(f))
